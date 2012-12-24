@@ -1,6 +1,7 @@
 package snapshot
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 	"hesfic/dir"
 )
 
-func CollectGarbage(namesToLeave []string) error {
+func CollectGarbage(namesToLeave []string, dryRun bool) error {
 	if len(namesToLeave) == 0 {
 		return nil
 	}
@@ -34,10 +35,6 @@ func CollectGarbage(namesToLeave []string) error {
 		}
 	}
 
-	//for k, v := range usedRefs {
-	//	fmt.Printf("%s - %d\n", &k, v)
-	//}
-
 	// Remove unused blocks.
 	err := filepath.Walk(config.BlocksPath, func(path string, fi os.FileInfo, err error) error {
 		if fi.Mode().IsDir() {
@@ -50,12 +47,17 @@ func CollectGarbage(namesToLeave []string) error {
 		if ref == nil {
 			return nil // not a block, skip
 		}
-		if usedRefs[*ref] > 0 {
+		if n, ok := usedRefs[*ref]; ok || n > 0 {
 			return nil // block is used
 		}
-		// Block unused, remove it.
-		log.Printf("removing unused block %s", ref)
-		return os.Remove(path)
+		if !dryRun {
+			// Block unused, remove it.
+			log.Printf("removing unused block %s", ref)
+			return os.Remove(path)
+		} else {
+			fmt.Printf("unused block %s\n", ref)
+		}
+		return nil
 	})
 	if err != nil {
 		return err

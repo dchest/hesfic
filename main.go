@@ -23,6 +23,7 @@ var (
 	keysFlag    = flag.String("keys", "", "key file path")
 	commentFlag = flag.String("comment", "", "comment to use when creating snapshot")
 	logFlag     = flag.Bool("log", false, "log actions")
+	dryRunFlag  = flag.Bool("dry", false, "do not change files")
 )
 
 func getConfigDir() string {
@@ -259,5 +260,5 @@ func gc() (err error) {
 	if err != nil {
 		return err
 	}
-	return snapshot.CollectGarbage(namesToLeave)
+	return snapshot.CollectGarbage(namesToLeave, *dryRunFlag)
 }
