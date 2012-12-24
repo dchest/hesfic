@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"hesfic/block"
-	"hesfic/config"
+	"github.com/dchest/hesfic/block"
+	"github.com/dchest/hesfic/config"
 )
 
 type Entry struct {

@@ -12,10 +12,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"hesfic/block"
-	"hesfic/config"
-	"hesfic/dir"
-	"hesfic/snapshot"
+	"github.com/dchest/hesfic/block"
+	"github.com/dchest/hesfic/config"
+	"github.com/dchest/hesfic/dir"
+	"github.com/dchest/hesfic/snapshot"
 )
 
 var (

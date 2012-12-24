@@ -17,9 +17,9 @@ import (
 
 	"code.google.com/p/go.crypto/nacl/secretbox"
 
-	"hesfic/block"
-	"hesfic/config"
-	"hesfic/dir"
+	"github.com/dchest/hesfic/block"
+	"github.com/dchest/hesfic/config"
+	"github.com/dchest/hesfic/dir"
 )
 
 func IsValidName(name string) bool {

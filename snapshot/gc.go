@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"hesfic/block"
-	"hesfic/config"
-	"hesfic/dir"
+	"github.com/dchest/hesfic/block"
+	"github.com/dchest/hesfic/config"
+	"github.com/dchest/hesfic/dir"
 )
 
 func CollectGarbage(namesToLeave []string, dryRun bool) error {

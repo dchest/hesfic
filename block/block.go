@@ -13,7 +13,7 @@ import (
 	"code.google.com/p/snappy-go/snappy"
 	"github.com/dchest/blake2b"
 
-	"hesfic/config"
+	"github.com/dchest/hesfic/config"
 )
 
 // Block kinds.
