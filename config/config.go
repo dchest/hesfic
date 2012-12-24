@@ -22,9 +22,13 @@ var BlocksPath string
 // Path for snapshots.
 var SnapshotsPath string
 
+// Issue fsync call when writing blocks.
+var FileSync = false
+
 type serializedConfig struct {
 	BlockSize int
 	OutPath   string
+	FileSync  bool
 }
 
 func Load(configPath string) error {
@@ -46,6 +50,7 @@ func Load(configPath string) error {
 	} else {
 		BlockSize = sc.BlockSize
 	}
+	FileSync = sc.FileSync
 	BlocksPath = filepath.Join(sc.OutPath, "blocks")
 	SnapshotsPath = filepath.Join(sc.OutPath, "snapshots")
 	return nil
