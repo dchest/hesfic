@@ -21,7 +21,7 @@ type Entry struct {
 }
 
 // Save stores file from disk at the given path and returns its metadata.
-func saveFile(path string) (file *Entry, err error) {
+func saveFile(path string) (entry *Entry, err error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return
@@ -41,7 +41,7 @@ func saveFile(path string) (file *Entry, err error) {
 	if err != nil {
 		return
 	}
-	file = &Entry{
+	entry = &Entry{
 		Name:    fi.Name(),
 		Size:    fi.Size(),
 		ModTime: fi.ModTime(),
@@ -52,7 +52,7 @@ func saveFile(path string) (file *Entry, err error) {
 	return
 }
 
-func SaveDirectory(dirpath string) (file *Entry, err error) {
+func SaveDirectory(dirpath string) (entry *Entry, err error) {
 	fi, err := os.Stat(dirpath)
 	if err != nil {
 		return
@@ -66,25 +66,25 @@ func SaveDirectory(dirpath string) (file *Entry, err error) {
 	if err != nil {
 		return
 	}
-	files := make([]*Entry, 0)
+	entries := make([]*Entry, 0)
 	// Save files and subdirectories.
 	for _, fi := range fis {
 		fullpath := filepath.Join(dirpath, fi.Name())
-		var f *Entry
+		var e *Entry
 		if fi.IsDir() {
-			f, err = SaveDirectory(fullpath)
+			e, err = SaveDirectory(fullpath)
 		} else {
-			f, err = saveFile(fullpath)
+			e, err = saveFile(fullpath)
 		}
 		if err != nil {
 			return
 		}
-		files = append(files, f)
+		entries = append(entries, e)
 	}
 	// Save directory index.
 	w := block.NewWriter()
 	enc := json.NewEncoder(w)
-	err = enc.Encode(files)
+	err = enc.Encode(entries)
 	if err != nil {
 		return
 	}
@@ -93,7 +93,7 @@ func SaveDirectory(dirpath string) (file *Entry, err error) {
 		return
 	}
 	log.Printf("[%d] stored directory %s at %s", w.BlockCount(), dirpath, ref)
-	file = &Entry{
+	entry = &Entry{
 		Name:    fi.Name(),
 		Size:    fi.Size(),
 		ModTime: fi.ModTime(),
@@ -103,27 +103,27 @@ func SaveDirectory(dirpath string) (file *Entry, err error) {
 	return
 }
 
-func LoadDirectory(ref *block.Ref) (files []*Entry, err error) {
+func LoadDirectory(ref *block.Ref) (entries []*Entry, err error) {
 	r, err := block.NewReader(ref)
 	if err != nil {
 		return
 	}
-	err = json.NewDecoder(r).Decode(&files)
+	err = json.NewDecoder(r).Decode(&entries)
 	return
 }
 
-func restoreFile(file *Entry, outdir string) error {
-	var path = filepath.Join(outdir, file.Name)
-	if file.Mode.IsDir() {
-		if err := os.MkdirAll(path, file.Mode); err != nil {
+func restoreFile(entry *Entry, outdir string) error {
+	var path = filepath.Join(outdir, entry.Name)
+	if entry.Mode.IsDir() {
+		if err := os.MkdirAll(path, entry.Mode); err != nil {
 			return err
 		}
 	} else {
-		r, err := block.NewReader(file.Ref)
+		r, err := block.NewReader(entry.Ref)
 		if err != nil {
 			return err
 		}
-		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, file.Mode)
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, entry.Mode)
 		if err != nil {
 			return err
 		}
@@ -141,7 +141,7 @@ func restoreFile(file *Entry, outdir string) error {
 			return err
 		}
 	}
-	if err := os.Chtimes(path, time.Now(), file.ModTime); err != nil {
+	if err := os.Chtimes(path, time.Now(), entry.ModTime); err != nil {
 		return err
 	}
 	log.Printf("restored %s", path)
@@ -152,16 +152,16 @@ func RestoreDirectory(ref *block.Ref, outdir string) error {
 	if err := os.MkdirAll(outdir, 0755); err != nil {
 		return err
 	}
-	files, err := LoadDirectory(ref)
+	entries, err := LoadDirectory(ref)
 	if err != nil {
 		return err
 	}
-	for _, file := range files {
-		if err := restoreFile(file, outdir); err != nil {
+	for _, e := range entries {
+		if err := restoreFile(e, outdir); err != nil {
 			return err
 		}
-		if file.Mode.IsDir() {
-			if err := RestoreDirectory(file.Ref, filepath.Join(outdir, file.Name)); err != nil {
+		if e.Mode.IsDir() {
+			if err := RestoreDirectory(e.Ref, filepath.Join(outdir, e.Name)); err != nil {
 				return err
 			}
 		}
@@ -169,18 +169,18 @@ func RestoreDirectory(ref *block.Ref, outdir string) error {
 	return nil
 }
 
-func walkDirectory(ref *block.Ref, basePath string, callback func(path string, file *Entry) error) error {
-	files, err := LoadDirectory(ref)
+func walkDirectory(ref *block.Ref, basePath string, callback func(path string, entry *Entry) error) error {
+	entries, err := LoadDirectory(ref)
 	if err != nil {
 		return err
 	}
-	for _, file := range files {
-		path := filepath.Join(basePath, file.Name)
-		if err := callback(path, file); err != nil {
+	for _, e := range entries {
+		path := filepath.Join(basePath, e.Name)
+		if err := callback(path, e); err != nil {
 			return err
 		}
-		if file.Mode.IsDir() {
-			if err := walkDirectory(file.Ref, path, callback); err != nil {
+		if e.Mode.IsDir() {
+			if err := walkDirectory(e.Ref, path, callback); err != nil {
 				return err
 			}
 		}
@@ -188,12 +188,12 @@ func walkDirectory(ref *block.Ref, basePath string, callback func(path string, f
 	return nil
 }
 
-func Walk(ref *block.Ref, callback func(path string, file *Entry) error) error {
+func Walk(ref *block.Ref, callback func(path string, entry *Entry) error) error {
 	return walkDirectory(ref, "", callback)
 }
 
-func verifyEntry(file *Entry) error {
-	r, err := block.NewReader(file.Ref)
+func verifyFile(entry *Entry) error {
+	r, err := block.NewReader(entry.Ref)
 	if err != nil {
 		return err
 	}
@@ -204,11 +204,11 @@ func verifyEntry(file *Entry) error {
 }
 
 func VerifyDirectory(ref *block.Ref) error {
-	return Walk(ref, func(path string, file *Entry) error {
-		if file.Mode.IsDir() {
+	return Walk(ref, func(path string, entry *Entry) error {
+		if entry.Mode.IsDir() {
 			log.Printf("verified directory %s", path)
 		} else {
-			if err := verifyEntry(file); err != nil {
+			if err := verifyFile(entry); err != nil {
 				return err
 			}
 			log.Printf("verified file %s", path)
