@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"hesfic/block"
+	"hesfic/config"
 )
 
 type Entry struct {
@@ -132,10 +133,12 @@ func restoreFile(entry *Entry, outdir string) error {
 			os.Remove(path)
 			return err
 		}
-		if err := f.Sync(); err != nil {
-			f.Close()
-			os.Remove(path)
-			return err
+		if config.FileSync {
+			if err := f.Sync(); err != nil {
+				f.Close()
+				os.Remove(path)
+				return err
+			}
 		}
 		if err := f.Close(); err != nil {
 			os.Remove(path)
