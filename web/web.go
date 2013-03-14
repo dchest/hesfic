@@ -49,7 +49,7 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 		r.SourcePath = si.SourcePath
 		r.Time = si.Time.Local().Format("02 Jan 2006 15:04:05 Mon")
 		r.DirRef = si.DirRef.String()
-		r.DirRefPart = r.DirRef[:12] + "..."
+		r.DirRefPart = r.DirRef[:12] + "…"
 		rows[len(rows)-1-i] = r // in reverse
 	}
 
