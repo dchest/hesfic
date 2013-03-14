@@ -1,4 +1,160 @@
 Hesfic
-------
+======
 
-I won't tell you what it is, and you shouldn't use it until it's ready!
+"Here, Eat Some Files, Imposturous Cloud!"
+
+Hesfic is a difficult-to-use encrypted content-addressable block file storage
+for mirroring. WHAT? Basically, it allows you to take snapshots of your files
+and directories and store them as encrypted blocks somewhere (for example, in
+the Dropbox directory). Something like Git, but splits large files into smaller
+blocks, so that cloud things don't choke when synching them.
+
+Hesfic kinda works, but you shouldn't use it yet. It may lose you data.
+
+
+SETUP
+-----
+
+Hesfic stores encryption keys and configuration in $HOME/.hesfic/ directory.
+File "keys" must have 96 random bytes. Hesfic can create it using this command:
+
+  $ hesfic genkeys
+
+File "config" in JSON must contain output directory (where blocks and snapshots
+will be stored):
+
+  $ cat <<EOF > ~/.hesfic/config
+  {
+    "OutPath": "/Users/pupkin/Dropbox/Hesfic"
+  }
+
+
+(Alternatively, you can use different paths for config and keys by specifying
+them as command line arguments -config="path/to/cfg" and -keys="path/to/keys").
+
+
+USAGE
+-----
+
+Creating snapshots
+~~~~~~~~~~~~~~~~~~
+
+  $ hesfic create /path/to/directory
+
+This will create a snapshot of the given directory. Append --comment="some
+text" option to add comment for this snapshots.
+
+
+Listing snapshots
+~~~~~~~~~~~~~~~~~
+
+  $ hesfic list-snapshots
+
+Example output:
+
+  snapshot:     12d2c72a-e5d7cd59-4a819043-50656080-e0a2d686-3add22ce
+  date:         Mon, 24 Dec 2012 17:10:24 CET
+  source path:  /Users/pupkin/Documents
+  root ref:     fbefb02f5fa94cc861c9286f251850de977e0c4319ffe497
+  comment:      First snapshot.
+
+"Snapshot" is the unique name of the snapshot.
+
+
+Listing files inside snapshots
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  $ hesfic list-files <snapshot name or directory ref>
+
+
+Restoring snapshots
+~~~~~~~~~~~~~~~~~~~
+
+  $ hesfic restore <snapshot name or directory ref> /path/to/destination
+
+
+Verify
+~~~~~~
+
+  $ hesfic verify
+
+Verifies consistency of the store.
+
+
+Garbage collection
+~~~~~~~~~~~~~~~~~~
+
+  $ hesfic gc
+
+Garbage collection looks for unused blocks and removes them.
+
+
+Debugging
+~~~~~~~~~
+
+  $ hesfic show-ref <ref>
+
+Outputs content stored under the given ref.
+
+
+Logging
+~~~~~~~
+
+To log perfomed actions, append -log switch.
+
+
+
+TECHNICAL DETAILS
+-----------------
+
+Rough description:
+
+Files are split into blocks of configurable size (2 MiB by default).  Each
+block is hashed with a keyed hash function BLAKE2b (this hash is called a ref
+and used to address the block). The content of the block is compressed with
+Snappy, padded to the multiple of 512 bytes and encrypted with XSalsa20 and
+authenticated with Poly1305 (NaCl's secretbox), and stored somewhere.
+
+If the file consists of a single block, the ref to this block is the ref to the
+file itself. If there are two or more blocks, another block is created to store
+the array of refs (pointers) to blocks; ref to this file then is the ref to
+this block of pointers. Each block has an type indicator: whethere it's a data
+block or a pointer block.
+
+Directories are stored recursively as JSON files which contain file (or
+subdirectory) names and attributes (permissions, size, modification time) and
+refs to content. Example:
+
+  [
+    { "ModTime" : "2012-12-24T13:32:20+01:00",
+      "Mode" : 420,
+      "Name" : ".DS_Store",
+      "Ref" : "0f70108dc403bdb7c0291e687ad2ada7409202a24d3a7cf2",
+      "Size" : 6148
+    },
+    { "ModTime" : "2012-12-23T17:57:54+01:00",
+      "Mode" : 2147484141,
+      "Name" : "mruby",
+      "Ref" : "cae111449fd206908f10824e9bbc6782cf604b3cef20d6b0",
+      "Size" : 986
+    }
+  ]
+
+".DS_Store" is a file, "mruby" is a subdirectory, as indicated by
+Mode field. Now if we do
+
+  $ hesfic show-ref cae111449fd206908f10824e9bbc6782cf604b3cef20d6b0
+
+we get the JSON description of "mruby" subdirectory.
+
+Blocks are stored in "blocks" subdirectory of the output directory.
+
+Snapshots are stored in "snapshots" subdirectory. Snapshots are encrypted JSON
+files, which store refs to the root directory and additional information about
+snapshot (date, source directory path, comment). Snapshots have unique names in
+the following format: 8-byte timestamp || 16 random bytes. The name also serves
+as a nonce for encryption/authentication.
+
+
+Keyed hashing, block encryption/authentication, and snapshot
+encryption/authentication use separate 256-bit keys.
