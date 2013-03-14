@@ -16,6 +16,7 @@ import (
 	"github.com/dchest/hesfic/config"
 	"github.com/dchest/hesfic/dir"
 	"github.com/dchest/hesfic/snapshot"
+	"github.com/dchest/hesfic/web"
 )
 
 var (
@@ -96,6 +97,8 @@ func main() {
 		err = showRef()
 	case "gc":
 		err = gc()
+	case "web":
+		err = serveWeb()
 	default:
 		err = fmt.Errorf("unknown command: %s", flag.Arg(0))
 	}
@@ -261,4 +264,12 @@ func gc() (err error) {
 		return err
 	}
 	return snapshot.CollectGarbage(namesToLeave, *dryRunFlag)
+}
+
+func serveWeb() (err error) {
+	addr := "localhost:0"
+	if flag.NArg() > 0 && flag.Arg(1) != "" {
+		addr = flag.Arg(1)
+	}
+	return web.Serve(addr)
 }

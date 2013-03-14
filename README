@@ -103,6 +103,15 @@ Logging
 To log perfomed actions, append -log switch.
 
 
+Web interface
+~~~~~~~~~~~~~
+
+  $ hesfic web [addr:port]
+
+Launches web interface, which allows browsing snapshots and
+directories, and (in the future) download files. If addr:port
+is zero, listen on localhost:0 (random port).
+
 
 TECHNICAL DETAILS
 -----------------
