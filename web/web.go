@@ -18,7 +18,7 @@ import (
 var (
 	indexTemplate = template.Must(template.New("index").Parse(indexTemplateSrc))
 	dirTemplate   = template.Must(template.New("dir").Parse(dirTemplateSrc))
-	fileTemplate   = template.Must(template.New("file").Parse(fileTemplateSrc))
+	fileTemplate  = template.Must(template.New("file").Parse(fileTemplateSrc))
 )
 
 type snapshotDesc struct {
@@ -164,7 +164,7 @@ func fileHandler(w http.ResponseWriter, req *http.Request) {
 	var b bytes.Buffer
 	if err := fileTemplate.Execute(&b,
 		&struct {
-			Title  string
+			Title string
 		}{
 			"File",
 		}); err != nil {
@@ -255,6 +255,5 @@ const dirTemplateSrc = commonHeader + `
  </tr>
  {{end}}` + commonFooter
 
-
 const fileTemplateSrc = commonHeader +
-`<h4>Not implemented.</h4>` + commonFooter
+	`<h4>Not implemented.</h4>` + commonFooter
