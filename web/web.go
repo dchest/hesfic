@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"path"
 	"sort"
-	"time"
 
 	"github.com/dchest/hesfic/block"
 	"github.com/dchest/hesfic/dir"
@@ -37,8 +36,8 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	rows := make([]snapshotDesc, 0)
-	for _, name := range names {
+	rows := make([]snapshotDesc, len(names))
+	for i, name := range names {
 		var r snapshotDesc
 		r.Name = name
 		si, err := snapshot.LoadInfo(name)
@@ -48,10 +47,10 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		r.Comment = si.Comment
 		r.SourcePath = si.SourcePath
-		r.Time = si.Time.Local().Format(time.RFC1123)
+		r.Time = si.Time.Local().Format("02 Jan 2006 15:04:05 Mon")
 		r.DirRef = si.DirRef.String()
 		r.DirRefPart = r.DirRef[:12] + "..."
-		rows = append(rows, r)
+		rows[len(rows)-1-i] = r // in reverse
 	}
 
 	var b bytes.Buffer
@@ -130,8 +129,8 @@ func dirHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	rows := make([]fileDesc, 0)
-	for _, f := range files {
+	rows := make([]fileDesc, len(files))
+	for i, f := range files {
 		var r fileDesc
 		r.IsDir = f.Mode.IsDir()
 		r.Name = f.Name
@@ -139,7 +138,7 @@ func dirHandler(w http.ResponseWriter, req *http.Request) {
 		r.Time = f.ModTime.Local().Format("02 Jan 2006 15:04")
 		r.Size = sizeString(f.Size)
 		r.Ref = f.Ref.String()
-		rows = append(rows, r)
+		rows[i] = r
 	}
 	sort.Sort(fileDescSlice(rows))
 	var b bytes.Buffer
@@ -228,7 +227,7 @@ const indexTemplateSrc = commonHeader + `
  <tr>
   <td><a href="dir/{{.DirRef}}" title="Snapshot {{.Name}}">{{.Time}}</a></td>
   <td>{{.SourcePath}}</td>
-  <td><code title="{{.DirRef}}">{{.DirRefPart}}</code></td>
+  <td><small style="font: 10px monospace" title="{{.DirRef}}">{{.DirRefPart}}</small></td>
   <td>{{.Comment}}</td>
  </tr>
  {{end}}` + commonFooter
