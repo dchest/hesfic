@@ -156,10 +156,6 @@ func (w *Writer) BlockCount() int {
 	return w.blockCount
 }
 
-func refToNonce(ref *Ref) *[24]byte {
-	return (*[24]byte)(ref)
-}
-
 func (w *Writer) saveBlock() error {
 	// Calculate hash of uncompressed data for ref.
 	ref := calculateRef(w.h, w.buf[:w.n])
