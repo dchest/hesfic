@@ -28,6 +28,7 @@ will be stored):
   {
     "OutPath": "/Users/pupkin/Dropbox/Hesfic"
   }
+  EOF
 
 
 (Alternatively, you can use different paths for config and keys by specifying
@@ -43,7 +44,7 @@ Creating snapshots
   $ hesfic create /path/to/directory
 
 This will create a snapshot of the given directory. Append --comment="some
-text" option to add comment for this snapshots.
+text" option to add comment for this snapshot.
 
 
 Listing snapshots
@@ -128,7 +129,7 @@ authenticated with Poly1305 (NaCl's secretbox), and stored somewhere.
 If the file consists of a single block, the ref to this block is the ref to the
 file itself. If there are two or more blocks, another block is created to store
 the array of refs (pointers) to blocks; ref to this file then is the ref to
-this block of pointers. Each block has an type indicator: whethere it's a data
+this block of pointers. Each block has an type indicator: whether it's a data
 block or a pointer block.
 
 Directories are stored recursively as JSON files which contain file (or
