@@ -8,7 +8,7 @@ for mirroring. WHAT? Basically, it allows you to take snapshots of your files
 and directories and store them as encrypted blocks somewhere (for example, in
 the Dropbox directory). Something like Git, but splits large files into smaller
 blocks, so that cloud things don't choke when synching them. Oh, and it
-also compressed them with Snappy before encrypting.
+also compresses them with Snappy before encrypting.
 
 Hesfic kinda works, but you shouldn't use it yet. It may lose you data.
 
