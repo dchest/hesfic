@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/go.crypto/nacl/secretbox"
+	"golang.org/x/crypto/nacl/secretbox"
 
 	"github.com/dchest/hesfic/block"
 	"github.com/dchest/hesfic/config"

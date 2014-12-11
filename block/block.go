@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.google.com/p/go.crypto/nacl/secretbox"
+	"golang.org/x/crypto/nacl/secretbox"
 	"code.google.com/p/snappy-go/snappy"
 	"github.com/dchest/blake2b"
 
